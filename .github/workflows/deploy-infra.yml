@@ -1,0 +1,31 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - test
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Azure
+        run: |
+          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0  
+          
+      - name: Terraform Init
+        run: |
+          terraform init
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve

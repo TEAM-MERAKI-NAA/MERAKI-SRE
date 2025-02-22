@@ -1,0 +1,7 @@
+# terraform/terraform.tfvars
+resource_group_name = "my-web-app-rg"
+location            = "East US"
+db_host             = "mywebappdb.postgres.database.azure.com"
+db_admin_login      = "adminuser"
+db_admin_password   = "securepassword"
+db_name             = "mydb"
