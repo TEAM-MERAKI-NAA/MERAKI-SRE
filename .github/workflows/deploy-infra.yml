@@ -1,4 +1,4 @@
-name: Deploy Infrastructures
+name: Deploy the Infrastructures
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Login to Azure
+      - name: Login to the Azure
         run: |
           echo "Logging in with AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}"
           echo "Logging in with AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}"
