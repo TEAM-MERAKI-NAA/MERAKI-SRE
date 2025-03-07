@@ -2,19 +2,14 @@ provider "azurerm" {
   features {}
 }
 
-locals {
-  name_prefix = var.prefix
-}
-
-# Resource Group
 resource "azurerm_resource_group" "main" {
-  name     = "${local.name_prefix}-rg"
+  name     = "${var.prefix}-rg"
   location = var.location
 }
 
 # Public Virtual Network
 resource "azurerm_virtual_network" "public_vnet" {
-  name                = "${local.name_prefix}-public-vnet"
+  name                = "${var.prefix}-public-vnet"
   address_space       = [var.public_vnet_cidr]
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
@@ -22,23 +17,23 @@ resource "azurerm_virtual_network" "public_vnet" {
 
 # Private Virtual Network
 resource "azurerm_virtual_network" "private_vnet" {
-  name                = "${local.name_prefix}-private-vnet"
+  name                = "${var.prefix}-private-vnet"
   address_space       = [var.private_vnet_cidr]
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
 }
 
-# Public Subnet (Frontend)
+# Public Subnet
 resource "azurerm_subnet" "public_subnet" {
-  name                 = "${local.name_prefix}-public-subnet"
+  name                 = "${var.prefix}-public-subnet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.public_vnet.name
   address_prefixes     = [var.public_subnet_cidr]
 }
 
-# Private Subnet (Backend & DB)
+# Private Subnet
 resource "azurerm_subnet" "private_subnet" {
-  name                 = "${local.name_prefix}-private-subnet"
+  name                 = "${var.prefix}-private-subnet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.private_vnet.name
   address_prefixes     = [var.private_subnet_cidr]
