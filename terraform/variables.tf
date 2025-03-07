@@ -3,11 +3,6 @@ variable "prefix" {
   type        = string
 }
 
-variable "default_tags" {
-  description = "Default tags for resources"
-  type        = map(string)
-}
-
 variable "location" {
   description = "Azure location"
   type        = string
