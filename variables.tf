@@ -1,35 +1,39 @@
-# terraform/variables.tf
-variable "resource_group_name" {
-  description = "Name of the resource group"
+variable "prefix" {
+  description = "Prefix for resource names"
   type        = string
 }
 
 variable "location" {
-  description = "Azure region"
+  description = "Azure location"
   type        = string
 }
 
-variable "db_server_name" {
-  description = "Name of the PostgreSQL server"
+variable "public_vnet_cidr" {
+  description = "CIDR block for the Public Virtual Network"
   type        = string
 }
 
-variable "db_admin_login" {
-  description = "Admin login for PostgreSQL"
+variable "private_vnet_cidr" {
+  description = "CIDR block for the Private Virtual Network"
+  type        = string
+}
+
+variable "public_subnet_cidr" {
+  description = "CIDR block for the public subnet"
+  type        = string
+}
+
+variable "private_subnet_cidr" {
+  description = "CIDR block for the private subnet"
+  type        = string
+}
+
+variable "db_admin_user" {
+  description = "Database administrator username"
   type        = string
 }
 
 variable "db_admin_password" {
-  description = "Admin password for PostgreSQL"
-  type        = string
-}
-
-variable "db_name" {
-  description = "Name of the PostgreSQL database"
-  type        = string
-}
-
-variable "acr_name" {
-  description = "Name of the Azure Container Registry"
+  description = "Database administrator password"
   type        = string
 }
