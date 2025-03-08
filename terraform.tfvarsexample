@@ -1,7 +1,12 @@
-# terraform/terraform.tfvars
-resource_group_name = "my-web-app-rg"
+prefix              = "myproject"
 location            = "East US"
-db_host             = "mywebappdb.postgres.database.azure.com"
-db_admin_login      = "adminuser"
-db_admin_password   = "securepassword"
-db_name             = "mydb"
+public_vnet_cidr    = "10.0.0.0/16"
+private_vnet_cidr   = "10.1.0.0/16"
+public_subnet_cidr  = "10.0.1.0/24"
+private_subnet_cidr = "10.1.1.0/24"
+db_admin_user       = "dbadmin"
+db_admin_password   = "SecurePassword123!"
+default_tags = {
+  Environment = "Development"
+  Project     = "MyProject"
+}
