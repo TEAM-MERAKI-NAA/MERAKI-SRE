@@ -1,45 +1,40 @@
-# terraform/main.tf
 provider "azurerm" {
   features {}
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
+resource "azurerm_resource_group" "main" {
+  name     = "${var.prefix}-rg"
   location = var.location
 }
 
-resource "azurerm_container_group" "web_server" {
-  name                = "my-web-server"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  ip_address_type     = "Public"
-  os_type             = "Linux"
+# Public Virtual Network
+resource "azurerm_virtual_network" "public_vnet" {
+  name                = "${var.prefix}-public-vnet"
+  address_space       = [var.public_vnet_cidr]
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+}
 
-  container {
-    name   = "backend"
-    image  = "docker.io/teammeraki/backend:latest"
-    cpu    = "1"
-    memory = "1.5"
+# Private Virtual Network
+resource "azurerm_virtual_network" "private_vnet" {
+  name                = "${var.prefix}-private-vnet"
+  address_space       = [var.private_vnet_cidr]
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+}
 
-    ports {
-      port     = 8000
-      protocol = "TCP"
-    }
+# Public Subnet
+resource "azurerm_subnet" "public_subnet" {
+  name                 = "${var.prefix}-public-subnet"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.public_vnet.name
+  address_prefixes     = [var.public_subnet_cidr]
+}
 
-    environment_variables = {
-      DATABASE_URL = "postgres://${var.db_admin_login}:${var.db_admin_password}@${var.db_host}:5432/${var.db_name}"
-    }
-  }
-
-  container {
-    name   = "frontend"
-    image  = "docker.io/teammeraki/frontend:latest"
-    cpu    = "1"
-    memory = "1.5"
-
-    ports {
-      port     = 80
-      protocol = "TCP"
-    }
-  }
+# Private Subnet
+resource "azurerm_subnet" "private_subnet" {
+  name                 = "${var.prefix}-private-subnet"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.private_vnet.name
+  address_prefixes     = [var.private_subnet_cidr]
 }
