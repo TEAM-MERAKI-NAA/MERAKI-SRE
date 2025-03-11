@@ -1,7 +1,10 @@
+# provider as Azure 
 provider "azurerm" {
   features {}
 }
 
+
+#Resource Group
 resource "azurerm_resource_group" "main" {
   name     = "${var.prefix}-rg"
   location = var.location
@@ -23,6 +26,7 @@ resource "azurerm_virtual_network" "private_vnet" {
   resource_group_name = azurerm_resource_group.main.name
 }
 
+
 # Public Subnet
 resource "azurerm_subnet" "public_subnet" {
   name                 = "${var.prefix}-public-subnet"
@@ -30,6 +34,7 @@ resource "azurerm_subnet" "public_subnet" {
   virtual_network_name = azurerm_virtual_network.public_vnet.name
   address_prefixes     = [var.public_subnet_cidr]
 }
+
 
 # Private Subnet
 resource "azurerm_subnet" "private_subnet" {
