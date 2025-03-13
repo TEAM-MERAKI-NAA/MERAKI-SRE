@@ -1,3 +1,13 @@
+variable "tags" {
+  description = "Tags to apply to resources"
+  type        = map(string)
+  default     = {
+    Project = "ImmigrationHub"
+    Team    = "Meraki"
+  }
+}
+
+
 variable "prefix" {
   description = "Prefix for resource names"
   type        = string
