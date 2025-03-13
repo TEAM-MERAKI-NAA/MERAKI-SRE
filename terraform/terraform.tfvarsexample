@@ -1,0 +1,16 @@
+prefix              = "ImmigrationHub"
+location            = "East US"
+public_vnet_cidr    = "10.0.0.0/16"
+private_vnet_cidr   = "10.1.0.0/16"
+public_subnet_cidr  = "10.0.1.0/24"
+private_subnet_cidr = "10.1.1.0/24"
+db_admin_user       = "dbadmin"
+db_admin_password   = "SecurePassword123!"
+az_storage_account_name = "frontendstorage"
+app_service_name    = "ImmigrationHub-backend"
+app_service_plan    = "ImmigrationHub-app-service-plan"
+default_tags = {
+  Environment = "Production"
+  Project     = "ImmigrationHub"
+  Team        = "Meraki"
+}
