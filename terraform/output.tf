@@ -1,3 +1,9 @@
+
+# Adding Tags
+output "tags" {
+  value = local.project_tags
+}
+
 # Resource Group
 output "resource_group_name" {
   description = "The name of the Azure Resource Group"
