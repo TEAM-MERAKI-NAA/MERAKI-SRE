@@ -14,9 +14,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+        run: |
+          az login --service-principal \
+            -u ${{ secrets.AZURE_CLIENT_ID }} \
+            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -42,13 +44,11 @@ jobs:
           npm install
           npm run build
 
-      - name: Deploy to Azure Storage
-        uses: azure/cli@v1
-        with:
-          inlineScript: |
-            az storage blob upload-batch --account-name frontendstorage${{ secrets.AZURE_STORAGE_SUFFIX }} \
-              --source frontend/build \
-              --destination '$web' --overwrite
+      - name: Upload Frontend to Azure Storage
+        run: |
+          az storage blob upload-batch --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --source frontend/build \
+            --destination '$web' --overwrite
 
   deploy-backend:
     runs-on: ubuntu-latest
@@ -57,7 +57,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Deploy to Azure App Service
+      - name: Login to Azure
+        run: |
+          az login --service-principal \
+            -u ${{ secrets.AZURE_CLIENT_ID }} \
+            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Deploy Backend to Azure App Service
         uses: azure/webapps-deploy@v2
         with:
           app-name: "myproject-backend"
