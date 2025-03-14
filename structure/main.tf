@@ -29,7 +29,7 @@ resource "azurerm_public_ip" "vm_public_ip" {
   name                = "${var.prefix}-vm-public-ip"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
 }
 
 # Network Security Group
@@ -184,3 +184,4 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = "latest"
   }
 }
+
