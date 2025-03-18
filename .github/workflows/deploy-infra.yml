@@ -1,0 +1,123 @@
+name: Deploy Application
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: 'Terraform Infrastructure'
+    runs-on: ubuntu-latest
+    outputs:
+      vm_ip: ${{ steps.terraform_output.outputs.public_ip }}
+      ssh_user: ${{ steps.terraform_output.outputs.ssh_user }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.0.0
+
+    - name: Configure SSH Key
+      run: |
+        mkdir -p ~/.ssh/
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+        chmod 600 ~/.ssh/id_rsa.pub
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      env:
+        TF_VAR_admin_username: ${{ secrets.ADMIN_USERNAME }}
+        TF_VAR_ssh_public_key_path: ~/.ssh/id_rsa.pub
+
+    - name: Get Terraform Outputs
+      id: terraform_output
+      run: |
+        echo "public_ip=$(terraform output -raw public_ip_address)" >> $GITHUB_OUTPUT
+        echo "ssh_user=$(terraform output -raw admin_username || echo 'adminuser')" >> $GITHUB_OUTPUT
+
+  deploy_backend:
+    name: 'Deploy Backend'
+    needs: terraform
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh/
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo -e "Host vm\n\tHostName ${{ needs.terraform.outputs.vm_ip }}\n\tUser ${{ needs.terraform.outputs.ssh_user }}\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+    - name: Wait for VM to be ready
+      run: |
+        echo "Waiting for VM to be ready..."
+        timeout 300 bash -c 'until ssh vm "echo VM is ready"; do sleep 5; done'
+
+    - name: Install Git and Docker
+      run: |
+        ssh vm "sudo apt-get update && sudo apt-get install -y git"
+        ssh vm "curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh"
+        ssh vm "sudo usermod -aG docker \$USER && sudo systemctl enable docker && sudo systemctl start docker"
+        ssh vm "sudo curl -L \"https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-linux-x86_64\" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose"
+        ssh vm "echo Docker installation completed"
+
+    - name: Deploy Backend
+      run: |
+        ssh vm "mkdir -p ~/apps/backend"
+        ssh vm "cd ~/apps/backend && git clone ${{ secrets.BACKEND_REPO_URL }} ."
+        ssh vm "cd ~/apps/backend && docker build -t backend:latest -f Dockerfile-backend ."
+        ssh vm "cd ~/apps/backend && docker run -d --name backend -p 8000:8000 --restart always backend:latest"
+        echo "Backend deployed successfully!"
+
+  deploy_frontend:
+    name: 'Deploy Frontend'
+    needs: [terraform, deploy_backend]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh/
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo -e "Host vm\n\tHostName ${{ needs.terraform.outputs.vm_ip }}\n\tUser ${{ needs.terraform.outputs.ssh_user }}\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+    - name: Deploy Frontend
+      run: |
+        ssh vm "mkdir -p ~/apps/frontend"
+        ssh vm "cd ~/apps/frontend && git clone ${{ secrets.FRONTEND_REPO_URL }} ."
+        ssh vm "cd ~/apps/frontend && docker build -t frontend:latest -f Dockerfile-frontend ."
+        ssh vm "cd ~/apps/frontend && docker run -d --name frontend -p 3000:3000 --restart always frontend:latest"
+        echo "Frontend deployed successfully!"
+
+  verify_deployment:
+    name: 'Verify Deployment'
+    needs: [terraform, deploy_backend, deploy_frontend]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check Backend Status
+      run: |
+        echo "Checking backend status..."
+        curl -s -o /dev/null -w "%{http_code}" http://${{ needs.terraform.outputs.vm_ip }}:8000 || echo "Backend check failed with status code $?"
+
+    - name: Check Frontend Status
+      run: |
+        echo "Checking frontend status..."
+        curl -s -o /dev/null -w "%{http_code}" http://${{ needs.terraform.outputs.vm_ip }}:3000 || echo "Frontend check failed with status code $?"
+
+    - name: Deployment Summary
+      run: |
+        echo "Deployment completed"
+        echo "Backend URL: http://${{ needs.terraform.outputs.vm_ip }}:8000"
+        echo "Frontend URL: http://${{ needs.terraform.outputs.vm_ip }}:3000"
