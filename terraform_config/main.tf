@@ -144,6 +144,13 @@ locals {
     sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
     echo "listen_addresses = '*'" >> /etc/postgresql/*/main/postgresql.conf
     echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/*/main/pg_hba.conf
+    
+    # Create database and user for Django application
+    sudo -u postgres psql -c "CREATE USER ubuntu WITH PASSWORD 'Seneca@clo900';"
+    sudo -u postgres psql -c "ALTER USER ubuntu WITH SUPERUSER;"
+    sudo -u postgres psql -c "CREATE DATABASE immigrationhub;"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE immigrationhub TO ubuntu;"
+    
     systemctl restart postgresql
 
     # Install Python and Django
@@ -162,7 +169,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   size                = "Standard_B2s"
   admin_username      = var.admin_username
   custom_data         = base64encode(local.custom_data)
-  
+
   network_interface_ids = [
     azurerm_network_interface.vm_nic.id,
   ]
