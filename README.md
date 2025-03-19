@@ -112,3 +112,115 @@ terraform destroy
 ## Support
 
 For issues or questions, please file an issue in the repository or contact the project maintainer.
+
+# MERAKI SRE Repository
+
+This repository contains the Site Reliability Engineering (SRE) configurations and deployment scripts for the MERAKI project.
+
+## Frontend Docker Setup
+
+### Prerequisites
+- Docker installed on your system
+- Node.js 20.x (for local development)
+- Access to the MERAKI-FE repository
+
+### Dockerfile Configuration
+The frontend Dockerfile is located in `MERAKI-FE/Dockerfile` with the following configuration:
+
+```dockerfile
+# Use Node.js image
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy project files
+COPY . .
+
+# Build the app
+RUN npm run build
+
+# Set environment variables
+ENV HOST=0.0.0.0
+ENV PORT=3000
+ENV WDS_SOCKET_PORT=0
+
+# Expose port
+EXPOSE 3000
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Start the development server with host flag
+CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "3000"]
+```
+
+### Building and Running the Container
+
+1. Navigate to the frontend directory:
+```bash
+cd MERAKI-FE
+```
+
+2. Build the Docker image:
+```bash
+sudo docker build -t immigrationhub .
+```
+
+3. Run the container:
+```bash
+sudo docker run -d -p 3000:3000 immigrationhub
+```
+
+4. Verify the container is running:
+```bash
+sudo docker ps
+```
+
+5. Check container logs:
+```bash
+sudo docker logs $(sudo docker ps -q)
+```
+
+### Troubleshooting
+
+#### Permission Issues
+If you encounter permission issues:
+
+1. Add your user to the docker group:
+```bash
+sudo usermod -aG docker $USER
+```
+
+2. Apply the group changes:
+```bash
+newgrp docker
+```
+
+### Accessing the Application
+- Local access: http://localhost:3000
+- Remote access: http://<your-vm-ip>:3000
+
+### Health Checks
+The container includes a healthcheck that runs every 30 seconds to verify the application is responding correctly.
+
+### Environment Variables
+- `HOST`: Set to 0.0.0.0 to allow external access
+- `PORT`: Set to 3000 for the development server
+- `WDS_SOCKET_PORT`: Set to 0 for WebSocket connections
+
+## Contributing
+1. Create a new branch for your changes
+2. Make your changes
+3. Test the Docker build and run process
+4. Submit a pull request
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
