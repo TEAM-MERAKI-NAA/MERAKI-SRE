@@ -1,132 +1,75 @@
-# Azure Web Hosting Terraform Configuration
+# MERAKI SRE Deployment Guide
 
-This Terraform configuration sets up an Azure infrastructure for hosting a web application with React frontend, Django backend, and PostgreSQL database.
+## Step 1: Infrastructure Setup
 
-## Infrastructure Components
+### Prerequisites
+- [Terraform](https://www.terraform.io/downloads.html) installed (v1.0.0+)
+- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) installed and configured
+- SSH key pair for VM access
 
+### Infrastructure Components
 - **Single Ubuntu VM**: Hosts all application components
 - **Public IP**: Allows access from the internet
 - **Single VNet with Public Subnet**: Network infrastructure
 - **Network Security Group**: Controls traffic with specific inbound rules
 - **Custom Data Script**: Automatically installs all required software
 
-## Prerequisites
-
-- [Terraform](https://www.terraform.io/downloads.html) installed (v1.0.0+)
-- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) installed and configured
-- SSH key pair for VM access
-
-## Configuration Files
-
-The project consists of three main files:
-
-- **main.tf**: Contains the primary infrastructure configuration
-- **variables.tf**: Defines customizable variables for the deployment
-- **outputs.tf**: Specifies useful output values after deployment 
-
-## Network Security Rules
-
-The configuration allows the following traffic:
-
+### Network Security Rules
 - **Inbound**: 
   - SSH (Port 22): For server management
   - Web Ports (3000, 3001): For React applications
   - API Port (8000): For Django backend
 - **Outbound**: All traffic allowed
 
-## Software Installation
-
-The VM comes pre-installed with:
-- **Node.js and React**: Frontend development
-- **PostgreSQL**: Database services
-- **Python and Django**: Backend development
-
-## Deployment Instructions
-
-1. **Clone this repository**:
-   ```
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
-
-2. **Initialize Terraform**:
-   ```
-   terraform init
-   ```
-
-3. **Review the deployment plan**:
-   ```
-   terraform plan
-   ```
-
-4. **Deploy the infrastructure**:
-   ```
-   terraform apply
-   ```
-
-5. **Confirm the deployment** by typing `yes` when prompted.
-
-After successful deployment, Terraform will display important information such as the VM's public IP address and SSH connection string.
-
-## Accessing Your Server
-
-Connect to your VM using SSH:
+### Deployment Steps
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd <repository-directory>
 ```
+
+2. Initialize Terraform:
+```bash
+terraform init
+```
+
+3. Review the deployment plan:
+```bash
+terraform plan
+```
+
+4. Deploy the infrastructure:
+```bash
+terraform apply
+```
+
+5. Confirm the deployment by typing `yes` when prompted.
+
+## Step 2: Server Access and Verification
+
+1. Connect to your VM using SSH:
+```bash
 ssh adminuser@<public-ip>
 ```
-(Replace `adminuser` with your configured admin username if changed)
 
-## Deploying Your Website
+2. Verify pre-installed software:
+```bash
+# Check Docker
+docker --version
 
-1. **Connect to your VM** via SSH
-2. **Clone your website code**
-3. **Configure your applications**:
-   - React application typically runs on port 3000
-   - Django application typically runs on port 8000
-   - PostgreSQL runs on default port 5432
+# Check Node.js
+node --version
 
-## Production Considerations
+# Check Python
+python3 --version
 
-For a production environment, consider:
-- Implementing SSL/TLS with Let's Encrypt
-- Configuring a domain name
-- Setting up applications as services
-- Implementing a reverse proxy (Nginx/Apache)
-- Regular backups for your database
-
-## Customization
-
-Edit the `variables.tf` file to customize:
-- Resource prefix
-- Azure region
-- VM administrator username
-- SSH public key path
-
-## Cleanup
-
-To remove all resources when no longer needed:
-```
-terraform destroy
+# Check PostgreSQL
+psql --version
 ```
 
-## Support
+## Step 3: Frontend Deployment
 
-For issues or questions, please file an issue in the repository or contact the project maintainer.
-
-# MERAKI SRE Repository
-
-This repository contains the Site Reliability Engineering (SRE) configurations and deployment scripts for the MERAKI project.
-
-## Frontend Docker Setup
-
-### Prerequisites
-- Docker installed on your system
-- Node.js 20.x (for local development)
-- Access to the MERAKI-FE repository
-
-### Dockerfile Configuration
-The frontend Dockerfile is located in `MERAKI-FE/Dockerfile` with the following configuration:
-
+### Frontend Dockerfile (MERAKI-FE/Dockerfile)
 ```dockerfile
 # Use Node.js image
 FROM node:20-alpine
@@ -142,9 +85,6 @@ RUN npm install
 
 # Copy project files
 COPY . .
-
-# Build the app
-RUN npm run build
 
 # Set environment variables
 ENV HOST=0.0.0.0
@@ -162,65 +102,142 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "3000"]
 ```
 
-### Building and Running the Container
-
-1. Navigate to the frontend directory:
+### Frontend Deployment Steps
+1. Navigate to frontend directory:
 ```bash
 cd MERAKI-FE
 ```
 
 2. Build the Docker image:
 ```bash
-sudo docker build -t immigrationhub .
+docker build -t immigrationhub .
 ```
 
 3. Run the container:
 ```bash
-sudo docker run -d -p 3000:3000 immigrationhub
+docker run -d -p 3000:3000 immigrationhub
 ```
 
-4. Verify the container is running:
+## Step 4: Backend Deployment
+
+### Backend Dockerfile (MERAKI-BE/Dockerfile)
+```dockerfile
+# Use Python 3.11 slim image
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV DJANGO_SETTINGS_MODULE=meraki.settings
+ENV ALLOWED_HOSTS=*
+ENV DEBUG=True
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy project
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1
+
+# Run migrations and start server with explicit host and port
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --noreload"]
+```
+
+### Backend Deployment Steps
+1. Navigate to backend directory:
 ```bash
-sudo docker ps
+cd MERAKI-BE
 ```
 
-5. Check container logs:
+2. Build the Docker image:
 ```bash
-sudo docker logs $(sudo docker ps -q)
+docker build -t meraki-backend .
 ```
 
-### Troubleshooting
-
-#### Permission Issues
-If you encounter permission issues:
-
-1. Add your user to the docker group:
+3. Run the container:
 ```bash
-sudo usermod -aG docker $USER
+docker run -d -p 8000:8000 meraki-backend
 ```
 
-2. Apply the group changes:
+## Step 5: Container Management
+
+### Common Commands
+- Check container status:
 ```bash
-newgrp docker
+docker ps
 ```
 
-### Accessing the Application
-- Local access: http://localhost:3000
-- Remote access: http://<your-vm-ip>:3000
+- View container logs:
+```bash
+docker logs $(docker ps -q)
+```
 
-### Health Checks
-The container includes a healthcheck that runs every 30 seconds to verify the application is responding correctly.
+- Stop containers:
+```bash
+docker stop $(docker ps -q)
+```
+
+- Remove containers:
+```bash
+docker rm $(docker ps -aq)
+```
+
+## Step 6: Application Access
+
+### URLs
+- Frontend: http://<your-vm-ip>:3000
+- Backend API: http://<your-vm-ip>:8000
 
 ### Environment Variables
+
+#### Frontend
 - `HOST`: Set to 0.0.0.0 to allow external access
 - `PORT`: Set to 3000 for the development server
 - `WDS_SOCKET_PORT`: Set to 0 for WebSocket connections
 
-## Contributing
-1. Create a new branch for your changes
-2. Make your changes
-3. Test the Docker build and run process
-4. Submit a pull request
+#### Backend
+- `PYTHONDONTWRITEBYTECODE`: Prevents Python from writing .pyc files
+- `PYTHONUNBUFFERED`: Ensures Python output is sent straight to the terminal
+- `DJANGO_SETTINGS_MODULE`: Specifies the Django settings module
+- `ALLOWED_HOSTS`: Set to * to allow all hosts (configure appropriately for production)
+- `DEBUG`: Set to True for development (set to False in production)
 
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Step 7: Production Considerations
+
+### Security
+- Implement SSL/TLS with Let's Encrypt
+- Configure a domain name
+- Set DEBUG=False in Django settings
+- Configure proper ALLOWED_HOSTS in Django
+
+### Infrastructure
+- Set up applications as services
+- Implement a reverse proxy (Nginx/Apache)
+- Regular backups for your database
+
+## Step 8: Cleanup
+
+To remove all resources when no longer needed:
+```bash
+terraform destroy
+```
+
+## Support
+
+For issues or questions, please file an issue in the repository or contact the project maintainer.
