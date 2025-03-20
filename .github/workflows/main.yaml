@@ -31,10 +31,10 @@ jobs:
         # SSH into VM and deploy frontend
         ssh ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} '
           cd ~/MERAKI-FE
-          docker stop $(docker ps -q --filter ancestor=immigrationhub) || true
-          docker rm $(docker ps -aq --filter ancestor=immigrationhub) || true
-          docker build -t immigrationhub .
-          docker run -d -p 3000:3000 immigrationhub
+          docker stop $(docker ps -q --filter ancestor=ImmiHub-FE) || true
+          docker rm $(docker ps -aq --filter ancestor=ImmiHub-FE) || true
+          docker build -t ImmiHub-FE .
+          docker run -d -p 3000:3000 ImmiHub-FE
         '
 
     - name: Deploy Backend
@@ -45,10 +45,10 @@ jobs:
         # SSH into VM and deploy backend
         ssh ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} '
           cd ~/MERAKI-BE
-          docker stop $(docker ps -q --filter ancestor=meraki-backend) || true
-          docker rm $(docker ps -aq --filter ancestor=meraki-backend) || true
-          docker build -t meraki-backend .
-          docker run -d -p 8000:8000 meraki-backend
+          docker stop $(docker ps -q --filter ancestor=ImmiHub-BE) || true
+          docker rm $(docker ps -aq --filter ancestor=ImmiHub-BE) || true
+          docker build -t ImmiHub-BE .
+          docker run -d -p 8000:8000 ImmiHub-BE
         '
 
     - name: Health Check
