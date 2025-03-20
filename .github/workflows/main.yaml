@@ -8,6 +8,9 @@ env:
   AZURE_VM_HOST: ${{ secrets.AZURE_VM_HOST }}
   AZURE_VM_USERNAME: ${{ secrets.AZURE_VM_USERNAME }}
   AZURE_SSH_PRIVATE_KEY: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
+  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+  ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+  ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
 
 jobs:
   deploy:
@@ -31,10 +34,22 @@ jobs:
         # SSH into VM and deploy frontend
         ssh ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} '
           cd ~/MERAKI-FE
-          docker stop $(docker ps -q --filter ancestor=ImmiHub-FE) || true
-          docker rm $(docker ps -aq --filter ancestor=ImmiHub-FE) || true
+          # Login to ACR
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+          
+          # Stop and remove existing containers
+          docker stop $(docker ps -q --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE) || true
+          docker rm $(docker ps -aq --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE) || true
+          
+          # Build and tag image
           docker build -t ImmiHub-FE .
-          docker run -d -p 3000:3000 ImmiHub-FE
+          docker tag ImmiHub-FE ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE:latest
+          
+          # Push to ACR
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE:latest
+          
+          # Run the container
+          docker run -d -p 3000:3000 ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE:latest
         '
 
     - name: Deploy Backend
@@ -45,10 +60,22 @@ jobs:
         # SSH into VM and deploy backend
         ssh ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} '
           cd ~/MERAKI-BE
-          docker stop $(docker ps -q --filter ancestor=ImmiHub-BE) || true
-          docker rm $(docker ps -aq --filter ancestor=ImmiHub-BE) || true
+          # Login to ACR
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+          
+          # Stop and remove existing containers
+          docker stop $(docker ps -q --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE) || true
+          docker rm $(docker ps -aq --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE) || true
+          
+          # Build and tag image
           docker build -t ImmiHub-BE .
-          docker run -d -p 8000:8000 ImmiHub-BE
+          docker tag ImmiHub-BE ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE:latest
+          
+          # Push to ACR
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE:latest
+          
+          # Run the container
+          docker run -d -p 8000:8000 ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE:latest
         '
 
     - name: Health Check
