@@ -39,18 +39,18 @@ jobs:
           echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
           
           # Stop and remove existing containers
-          docker stop $(docker ps -q --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE) || true
-          docker rm $(docker ps -aq --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE) || true
+          docker stop $(docker ps -q --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/immihub-fe) || true
+          docker rm $(docker ps -aq --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/immihub-fe) || true
           
           # Build and tag image
-          docker build -t ImmiHub-FE .
-          docker tag ImmiHub-FE ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE:latest
+          docker build -t immihub-fe .
+          docker tag immihub-fe ${{ secrets.ACR_LOGIN_SERVER }}/immihub-fe:latest
           
           # Push to ACR
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE:latest
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/immihub-fe:latest
           
           # Run the container
-          docker run -d -p 3000:3000 ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-FE:latest
+          docker run -d -p 3000:3000 ${{ secrets.ACR_LOGIN_SERVER }}/immihub-fe:latest
         '
 
     - name: Deploy Backend
@@ -66,18 +66,18 @@ jobs:
           echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
           
           # Stop and remove existing containers
-          docker stop $(docker ps -q --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE) || true
-          docker rm $(docker ps -aq --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE) || true
+          docker stop $(docker ps -q --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/immihub-be) || true
+          docker rm $(docker ps -aq --filter ancestor=${{ secrets.ACR_LOGIN_SERVER }}/immihub-be) || true
           
           # Build and tag image
-          docker build -t ImmiHub-BE .
-          docker tag ImmiHub-BE ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE:latest
+          docker build -t immihub-be .
+          docker tag immihub-be ${{ secrets.ACR_LOGIN_SERVER }}/immihub-be:latest
           
           # Push to ACR
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE:latest
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/immihub-be:latest
           
           # Run the container
-          docker run -d -p 8000:8000 ${{ secrets.ACR_LOGIN_SERVER }}/ImmiHub-BE:latest
+          docker run -d -p 8000:8000 ${{ secrets.ACR_LOGIN_SERVER }}/immihub-be:latest
         '
 
     - name: Health Check
