@@ -8,6 +8,15 @@ resource "azurerm_resource_group" "main" {
   location = var.location
 }
 
+# Azure Container Registry
+resource "azurerm_container_registry" "acr" {
+  name                = "${var.prefix}acr"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  sku                 = "Basic"
+  admin_enabled       = true
+}
+
 # Single Virtual Network
 resource "azurerm_virtual_network" "vnet" {
   name                = "${var.prefix}-vnet"
