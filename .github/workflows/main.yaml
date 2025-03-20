@@ -28,11 +28,12 @@ jobs:
 
     - name: Deploy Frontend
       run: |
-        # Copy frontend files to VM
-        scp -r MERAKI-FE/* ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }}:~/MERAKI-FE/
-        
         # SSH into VM and deploy frontend
         ssh ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} '
+          # Clone frontend repository
+          rm -rf ~/MERAKI-FE
+          git clone https://github.com/TEAM-MERAKI-NAA/MERAKI-FE.git ~/MERAKI-FE
+          
           cd ~/MERAKI-FE
           # Login to ACR
           echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
@@ -54,11 +55,12 @@ jobs:
 
     - name: Deploy Backend
       run: |
-        # Copy backend files to VM
-        scp -r MERAKI-BE/* ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }}:~/MERAKI-BE/
-        
         # SSH into VM and deploy backend
         ssh ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} '
+          # Clone backend repository
+          rm -rf ~/MERAKI-BE
+          git clone https://github.com/TEAM-MERAKI-NAA/MERAKI-BE.git ~/MERAKI-BE
+          
           cd ~/MERAKI-BE
           # Login to ACR
           echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
