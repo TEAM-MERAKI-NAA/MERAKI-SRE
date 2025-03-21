@@ -150,6 +150,10 @@ locals {
     systemctl start docker
     systemctl enable docker
 
+    # Add adminuser to docker group
+    usermod -aG docker adminuser
+    newgrp docker
+
     # Install Node.js and npm for React
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
@@ -176,9 +180,6 @@ locals {
 
     # Install Django and other Python dependencies
     pip3 install django psycopg2-binary djangorestframework django-cors-headers python-dotenv requests beautifulsoup4 feedparser
-
-    # Add current user to docker group
-    usermod -aG docker $USER
 
     echo "Installation complete!"
   CUSTOMDATA
