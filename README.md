@@ -67,7 +67,58 @@ python3 --version
 psql --version
 ```
 
-## Step 3: Frontend Deployment
+## Step 3: Frontend Setup
+
+### Create Frontend Directory and Files
+1. Create the frontend directory:
+```bash
+mkdir MERAKI-FE
+cd MERAKI-FE
+```
+
+2. Create `package.json`:
+```json
+{
+  "name": "meraki-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.13.0",
+    "@mui/icons-material": "^5.11.16",
+    "axios": "^1.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.11.1",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
+```
 
 ### Frontend Dockerfile (MERAKI-FE/Dockerfile)
 ```dockerfile
@@ -102,23 +153,28 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "3000"]
 ```
 
-### Frontend Deployment Steps
-1. Navigate to frontend directory:
+## Step 4: Backend Setup
+
+### Create Backend Directory and Files
+1. Create the backend directory:
 ```bash
-cd MERAKI-FE
+mkdir MERAKI-BE
+cd MERAKI-BE
 ```
 
-2. Build the Docker image:
-```bash
-docker build -t immigrationhub .
+2. Create `requirements.txt`:
+```txt
+Django==4.2.3
+djangorestframework==3.14.0
+django-cors-headers==4.1.0
+psycopg2-binary==2.9.7
+python-dotenv==1.0.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+feedparser==6.0.10
+gunicorn==21.2.0
+whitenoise==6.5.0
 ```
-
-3. Run the container:
-```bash
-docker run -d -p 3000:3000 immigrationhub
-```
-
-## Step 4: Backend Deployment
 
 ### Backend Dockerfile (MERAKI-BE/Dockerfile)
 ```dockerfile
@@ -159,7 +215,25 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --noreload"]
 ```
 
-### Backend Deployment Steps
+## Step 5: Deployment Steps
+
+### Frontend Deployment
+1. Navigate to frontend directory:
+```bash
+cd MERAKI-FE
+```
+
+2. Build the Docker image:
+```bash
+docker build -t immigrationhub .
+```
+
+3. Run the container:
+```bash
+docker run -d -p 3000:3000 immigrationhub
+```
+
+### Backend Deployment
 1. Navigate to backend directory:
 ```bash
 cd MERAKI-BE
@@ -175,7 +249,7 @@ docker build -t meraki-backend .
 docker run -d -p 8000:8000 meraki-backend
 ```
 
-## Step 5: Container Management
+## Step 6: Container Management
 
 ### Common Commands
 - Check container status:
@@ -198,7 +272,7 @@ docker stop $(docker ps -q)
 docker rm $(docker ps -aq)
 ```
 
-## Step 6: Application Access
+## Step 7: Application Access
 
 ### URLs
 - Frontend: http://<your-vm-ip>:3000
@@ -218,7 +292,7 @@ docker rm $(docker ps -aq)
 - `ALLOWED_HOSTS`: Set to * to allow all hosts (configure appropriately for production)
 - `DEBUG`: Set to True for development (set to False in production)
 
-## Step 7: Production Considerations
+## Step 8: Production Considerations
 
 ### Security
 - Implement SSL/TLS with Let's Encrypt
@@ -231,7 +305,7 @@ docker rm $(docker ps -aq)
 - Implement a reverse proxy (Nginx/Apache)
 - Regular backups for your database
 
-## Step 8: Cleanup
+## Step 9: Cleanup
 
 To remove all resources when no longer needed:
 ```bash
