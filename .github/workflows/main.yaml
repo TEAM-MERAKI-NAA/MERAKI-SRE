@@ -1,4 +1,4 @@
-name: Deploy MERAKI Application
+name: Deploy THE MERAKI Application
 
 on:
   push:
