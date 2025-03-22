@@ -1,4 +1,4 @@
-name: Deploy MERAKI Application 
+name: Deploy the MERAKI Application 
 
 on:
   push:
@@ -88,22 +88,31 @@ jobs:
         ssh ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} '
           echo "Starting backend deployment..."
           
-          # Clone backend repository (specifically the main branch with Dockerfile)
+          # Clone backend repository
           rm -rf ~/MERAKI-BE
           git clone -b main https://github.com/TEAM-MERAKI-NAA/MERAKI-BE.git ~/MERAKI-BE
           
           echo "Moving to repository directory..."
           cd ~/MERAKI-BE
           
-          # Check if Dockerfile exists
-          if [ ! -f "Dockerfile" ]; then
-            echo "ERROR: Dockerfile not found in current directory"
-            echo "Contents of directory:"
+          # Try to find Dockerfile recursively
+          DOCKERFILE_PATH=$(find . -name "Dockerfile" | head -1)
+          
+          if [ -z "$DOCKERFILE_PATH" ]; then
+            echo "ERROR: Dockerfile not found in repository"
+            echo "Contents of root directory:"
             ls -la
             exit 1
           fi
           
-          echo "Dockerfile found, proceeding with build..."
+          # Extract directory path from file path
+          DOCKER_DIR=$(dirname "$DOCKERFILE_PATH")
+          echo "Dockerfile found at: $DOCKERFILE_PATH"
+          echo "Moving to directory: $DOCKER_DIR"
+          cd "$DOCKER_DIR"
+          
+          echo "Current directory contents:"
+          ls -la
           
           # Login to ACR
           echo "Logging in to ACR..."
