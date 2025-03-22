@@ -34,7 +34,7 @@ jobs:
           
           # Clone frontend repository (specifically the main branch with Dockerfile)
           rm -rf ~/MERAKI-FE
-          git clone -b development https://github.com/TEAM-MERAKI-NAA/MERAKI-FE.git ~/MERAKI-FE
+          git clone -b development https://github.com/TEAM-MERAKI-NAA/MERAKI-FE.git
           
           echo "Moving to repository directory..."
           cd ~/MERAKI-FE
