@@ -181,6 +181,43 @@ locals {
     # Install Django and other Python dependencies
     pip3 install django psycopg2-binary djangorestframework django-cors-headers python-dotenv requests beautifulsoup4 feedparser
 
+    # Clone the repository
+    git clone https://github.com/yourusername/MERAKI-SRE.git /home/adminuser/MERAKI-SRE
+    cd /home/adminuser/MERAKI-SRE
+
+    # Update Django settings
+    cat > /home/adminuser/MERAKI-BE/config/settings.py << 'EOL'
+    # ... existing settings ...
+    ALLOWED_HOSTS = ["*", "40.71.252.179"]
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'immigrationhub',
+            'USER': 'ubuntu',
+            'PASSWORD': 'Seneca@clo900',
+            'HOST': '127.0.0.1',
+            'PORT': '5432',
+        }
+    }
+    
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    STATIC_URL = '/static/'
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+    
+    FRONTEND_URL = 'http://40.71.252.179:3000'
+    EOL
+
+    # Collect static files
+    cd /home/adminuser/MERAKI-BE
+    python3 manage.py collectstatic --noinput
+    
+    # Apply migrations
+    python3 manage.py migrate
+    
+    # Start Django server
+    nohup python3 manage.py runserver 0.0.0.0:8000 > /dev/null 2>&1 &
+
     echo "Installation complete!"
   CUSTOMDATA
 }
