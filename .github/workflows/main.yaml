@@ -1,8 +1,8 @@
-name: Deploy the MERAKI Application 
+name: Deploy  MERAKI Application 
 
 on:
   push:
-    branches: [ latest-branch--updates ]
+    branches: [ main ]
 
 env:
   AZURE_VM_HOST: ${{ secrets.AZURE_VM_HOST }}
