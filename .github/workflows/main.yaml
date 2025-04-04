@@ -1,4 +1,4 @@
-name: Deploy MERAKI Application in Azure VM
+name: Deploy the MERAKI Application in Azure VM
 
 on:
   push:
