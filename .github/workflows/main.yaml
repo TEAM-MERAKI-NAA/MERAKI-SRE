@@ -2,7 +2,7 @@ name: Deploy MERAKI Application in Azure VM for testing
 
 on:
   push:
-    branches: [ main ]
+    branches: [ latest-branch-sandesh ]
 
 env:
   AZURE_VM_HOST: ${{ secrets.AZURE_VM_HOST }}
