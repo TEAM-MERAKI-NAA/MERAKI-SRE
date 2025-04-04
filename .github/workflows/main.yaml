@@ -1,4 +1,4 @@
-name: Deploy MERAKI Application in Azure VM for testing
+name: Deploy the MERAKI Application in Azure VM for testing
 
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
           
           # Clone frontend repository (specifically the main branch with Dockerfile)
           rm -rf ~/MERAKI-FE
-          git clone -b development https://github.com/TEAM-MERAKI-NAA/MERAKI-FE.git
+          git clone -b testing https://github.com/TEAM-MERAKI-NAA/MERAKI-FE.git
           
           echo "Moving to repository directory..."
           cd ~/MERAKI-FE
