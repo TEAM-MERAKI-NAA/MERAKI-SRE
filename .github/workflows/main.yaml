@@ -153,7 +153,7 @@ jobs:
             -e POSTGRES_USER="${{ secrets.POSTGRES_USER }}" \
             -e POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
             -e POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}" \
-            -e POSTGRES_PORT="${{ secrets.POSTGRES_PORT || '"'"'5432'"'"' }}" \
+            -e POSTGRES_PORT="${{ secrets.POSTGRES_PORT }}" \
             -e DEBUG="True" \
             ${{ secrets.ACR_LOGIN_SERVER }}/immihub-be:latest \
             python manage.py migrate
@@ -165,7 +165,7 @@ jobs:
             -e POSTGRES_USER="${{ secrets.POSTGRES_USER }}" \
             -e POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
             -e POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}" \
-            -e POSTGRES_PORT="${{ secrets.POSTGRES_PORT || '"'"'5432'"'"' }}" \
+            -e POSTGRES_PORT="${{ secrets.POSTGRES_PORT }}" \
             -e DEBUG="True" \
             ${{ secrets.ACR_LOGIN_SERVER }}/immihub-be:latest
           
